@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 
+use App\Task;
+
 class TasksController extends Controller
 {
     public function index()
     {
+        
         $data = [];
         if (\Auth::check()) {
             $user = \Auth::user();
@@ -38,12 +41,14 @@ class TasksController extends Controller
             'content' => 'required|max:191',
         ]);
         
-        $task = new Task;
-        $task->status = $request->status;
-        $task->content = $request->content;
-        $task->save();
+         $request->user()->tasks()->create([
+            'content' => $request->content,
+            'status' => $request->status,
+        ]);
 
         return redirect('/');
+        
+        
     }
     
     public function show($id)
@@ -64,28 +69,35 @@ class TasksController extends Controller
         ]);
     }
     
-    public function update(Request $request, $id)
+    public function update(Request $request,$id )
     {
         $this->validate($request, [
             'status' => 'required|max:10',
             'content' => 'required|max:191',
         ]);
-        
-        $task = Task::find($id);
-        $task->status = $request->status;
-        $task->content = $request->content;
-        $rask->save();
-
+       
+       
+            $task = Task::find($id);
+            
+        if (\Auth::id() === $task->user_id) { 
+            $task->status = $request->status;
+            $task->content = $request->content;
+            $task->save();
+       }
+       
         return redirect('/');
+
     }
     
     public function destroy($id)
     {
         $task = Task::find($id);
-        $task->delete();
+
+        if (\Auth::id() === $task->user_id) {
+            $task->delete();
+        }
 
         return redirect('/');
+
     }
-
-
 }
